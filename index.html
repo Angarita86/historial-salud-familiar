@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Historial de Salud Familiar</title>
+<link rel="stylesheet" href="css/estilos.css" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <div class="pantalla-login" id="pantallaLogin">
+    <div class="pantalla-login__contenido">
+      <span class="pantalla-login__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21s-7.5-4.6-10-9.1C.6 8.7 2 5 5.6 5c2 0 3.4 1.1 4.4 2.6C11 6.1 12.4 5 14.4 5 18 5 19.4 8.7 22 11.9 19.5 16.4 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <h2>Historial de Salud Familiar</h2>
+      <p>Inicia sesión con tu cuenta de Google para continuar</p>
+      <div id="botonGoogleSignIn"></div>
+    </div>
+  </div>
+
+  <div id="aplicacion" class="oculto">
+
+  <header class="encabezado">
+    <div class="encabezado__marca">
+      <span class="encabezado__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21s-7.5-4.6-10-9.1C.6 8.7 2 5 5.6 5c2 0 3.4 1.1 4.4 2.6C11 6.1 12.4 5 14.4 5 18 5 19.4 8.7 22 11.9 19.5 16.4 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <h1>Historial de Salud Familiar</h1>
+    </div>
+    <div class="encabezado__acciones">
+      <button class="encabezado__cambiar" id="botonCambiarMiembro">Ver a otro miembro</button>
+      <button class="encabezado__perfil" id="botonPerfil" aria-label="Cuenta">
+        <span id="inicialUsuario">?</span>
+      </button>
+    </div>
+  </header>
+
+  <dialog class="dialogo-codigo" id="dialogoCodigoVerificacion">
+    <form method="dialog" class="dialogo-codigo__form">
+      <p class="dialogo-codigo__titulo">Ingresa el código de verificación</p>
+      <p class="dialogo-codigo__ayuda">Pídeselo a la persona cuya información quieres consultar.</p>
+      <input type="text" id="miembroSeleccionado" placeholder="Nombre del miembro" />
+      <input type="password" id="codigoVerificacion" placeholder="Código de verificación" inputmode="numeric" />
+      <div class="dialogo-codigo__botones">
+        <button type="button" id="botonCancelarCodigo" class="dialogo-codigo__cancelar">Cancelar</button>
+        <button type="submit" id="botonConfirmarCodigo" class="dialogo-codigo__confirmar">Ver información</button>
+      </div>
+    </form>
+  </dialog>
+
+  <main class="contenido" id="vistaInicio">
+
+    <p class="contenido__persona" id="etiquetaPersonaVisible">Mostrando: tu información</p>
+
+    <section class="resumen">
+      <h2 class="resumen__titulo">Próximas tomas de hoy</h2>
+      <div class="lista-tarjetas" id="listaTomasHoy">
+        <article class="tarjeta tarjeta--toma">
+          <div class="tarjeta__hora">3:00 p.m.</div>
+          <div class="tarjeta__cuerpo">
+            <p class="tarjeta__titulo">Losartán 50mg</p>
+            <p class="tarjeta__detalle">Para: Mamá</p>
+          </div>
+          <button class="tarjeta__accion">Marcar tomada</button>
+        </article>
+        <article class="tarjeta tarjeta--toma tarjeta--vencida">
+          <div class="tarjeta__hora">11:00 a.m.</div>
+          <div class="tarjeta__cuerpo">
+            <p class="tarjeta__titulo">Amoxicilina 500mg</p>
+            <p class="tarjeta__detalle">Para: Sofía · atrasada</p>
+          </div>
+          <button class="tarjeta__accion">Marcar tomada</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="resumen">
+      <h2 class="resumen__titulo">Próximas citas</h2>
+      <div class="lista-tarjetas" id="listaCitasProximas">
+        <article class="tarjeta tarjeta--cita">
+          <div class="tarjeta__fecha">
+            <span class="tarjeta__dia">14</span>
+            <span class="tarjeta__mes">sep</span>
+          </div>
+          <div class="tarjeta__cuerpo">
+            <p class="tarjeta__titulo">Cardiología · Dr. Ramírez</p>
+            <p class="tarjeta__detalle">Papá · 9:30 a.m. · Clínica del Norte</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <button class="boton-flotante" id="botonNuevaCita" aria-label="Registrar nueva cita">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+
+  </main>
+
+  <nav class="nav-inferior" aria-label="Navegación principal">
+    <button class="nav-inferior__item nav-inferior__item--activo" data-vista="inicio">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="nav-inferior__item" data-vista="citas">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Citas</span>
+    </button>
+    <button class="nav-inferior__item" data-vista="medicamentos">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M9 9h6M9 13h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Medicamentos</span>
+    </button>
+    <button class="nav-inferior__item" data-vista="historial">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.3-5.6" stroke="currentColor" stroke-width="1.6"/><path d="M3 4v5h5M12 8v4l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Historial</span>
+    </button>
+    <button class="nav-inferior__item" data-vista="mas">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+      <span>Más</span>
+    </button>
+  </nav>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
