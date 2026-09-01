@@ -13,8 +13,19 @@ let codigoVerificacionActual = null;
 
 const dialogoCodigo = document.getElementById("dialogoCodigoVerificacion");
 
-document.getElementById("botonCambiarMiembro").addEventListener("click", () => {
+document.getElementById("botonCambiarMiembro").addEventListener("click", async () => {
+  const selector = document.getElementById("miembroSeleccionado");
+  selector.innerHTML = '<option value="">Cargando miembros...</option>';
   dialogoCodigo.showModal();
+
+  const respuesta = await llamarBackend("listarMiembros");
+  selector.innerHTML = '<option value="">Selecciona un miembro</option>';
+  (respuesta.miembros || []).forEach((miembro) => {
+    const opcion = document.createElement("option");
+    opcion.value = miembro.id_miembro;
+    opcion.textContent = miembro.nombre;
+    selector.appendChild(opcion);
+  });
 });
 
 document.getElementById("botonCancelarCodigo").addEventListener("click", () => {
@@ -27,15 +38,16 @@ document.getElementById("dialogoCodigoVerificacion").addEventListener("close", a
 
 document.getElementById("botonConfirmarCodigo").addEventListener("click", async (evento) => {
   evento.preventDefault();
-  const nombreIngresado = document.getElementById("miembroSeleccionado").value.trim();
+  const idMiembroSeleccionado = document.getElementById("miembroSeleccionado").value;
   const codigoIngresado = document.getElementById("codigoVerificacion").value.trim();
 
-  // Pendiente: resolver idMiembroConsultado a partir del nombre ingresado,
-  // por ejemplo con un selector en lugar de texto libre una vez exista la
-  // lista real de miembros. Por ahora se envía el código tal cual al backend,
-  // que es quien valida contra Miembros.codigo_verificacion.
+  if (!idMiembroSeleccionado) {
+    alert("Selecciona un miembro de la lista.");
+    return;
+  }
+
   const respuesta = await llamarBackend("listarResumenInicio", {
-    idMiembroConsultado: nombreIngresado,
+    idMiembroConsultado: idMiembroSeleccionado,
     codigoVerificacion: codigoIngresado,
   });
 
@@ -44,7 +56,7 @@ document.getElementById("botonConfirmarCodigo").addEventListener("click", async 
     return;
   }
 
-  idMiembroConsultado = nombreIngresado;
+  idMiembroConsultado = idMiembroSeleccionado;
   codigoVerificacionActual = codigoIngresado;
   document.getElementById("etiquetaPersonaVisible").textContent =
     "Mostrando: " + respuesta.miembro;
