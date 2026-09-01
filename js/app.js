@@ -82,7 +82,9 @@ document.getElementById("botonNuevaCita").addEventListener("click", () => {
 });
 
 document.getElementById("botonPerfil").addEventListener("click", () => {
-  alert("El menú de cuenta (cerrar sesión, editar tu ficha) se está construyendo. Muy pronto estará disponible aquí.");
+  if (confirm("¿Deseas cerrar sesión?")) {
+    cerrarSesion();
+  }
 });
 
 // Llamado genérico al backend de Apps Script. Todas las lecturas y escrituras de la
@@ -109,15 +111,30 @@ function decodificarBase64Url(cadena) {
 }
 
 function alIniciarSesion(respuestaCredencial) {
-  const datos = JSON.parse(decodificarBase64Url(respuestaCredencial.credential.split(".")[1]));
-  window.correoUsuarioActivo = datos.email;
-  document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email)
-    .charAt(0)
-    .toUpperCase();
+  try {
+    const datos = JSON.parse(decodificarBase64Url(respuestaCredencial.credential.split(".")[1]));
+    window.correoUsuarioActivo = datos.email;
+    document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email || "?")
+      .charAt(0)
+      .toUpperCase();
 
-  // Ya identificado, se oculta la pantalla de login y se muestra la aplicación.
-  document.getElementById("pantallaLogin").classList.add("oculto");
-  document.getElementById("aplicacion").classList.remove("oculto");
+    // Ya identificado, se oculta la pantalla de login y se muestra la aplicación.
+    document.getElementById("pantallaLogin").classList.add("oculto");
+    document.getElementById("aplicacion").classList.remove("oculto");
+  } catch (error) {
+    alert("No se pudo completar el inicio de sesión. Detalle técnico: " + error.message);
+  }
+}
+
+function cerrarSesion() {
+  window.correoUsuarioActivo = null;
+  idMiembroConsultado = null;
+  codigoVerificacionActual = null;
+  document.getElementById("aplicacion").classList.add("oculto");
+  document.getElementById("pantallaLogin").classList.remove("oculto");
+  if (window.google && google.accounts && google.accounts.id) {
+    google.accounts.id.disableAutoSelect();
+  }
 }
 
 // Inicializa el botón de Google en cuanto la librería de Google termina de cargar.
