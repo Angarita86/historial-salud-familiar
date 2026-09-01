@@ -45,7 +45,9 @@
     <form method="dialog" class="dialogo-codigo__form">
       <p class="dialogo-codigo__titulo">Ingresa el código de verificación</p>
       <p class="dialogo-codigo__ayuda">Pídeselo a la persona cuya información quieres consultar.</p>
-      <input type="text" id="miembroSeleccionado" placeholder="Nombre del miembro" />
+      <select id="miembroSeleccionado">
+        <option value="">Selecciona un miembro</option>
+      </select>
       <input type="password" id="codigoVerificacion" placeholder="Código de verificación" inputmode="numeric" />
       <div class="dialogo-codigo__botones">
         <button type="button" id="botonCancelarCodigo" class="dialogo-codigo__cancelar">Cancelar</button>
