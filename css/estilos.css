@@ -85,6 +85,24 @@ button:active { opacity: 0.85; }
   justify-content: center;
 }
 
+.boton-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--color-superficie);
+  border: 2px solid var(--color-borde);
+  border-radius: 999px;
+  padding: 16px 26px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-tinta);
+  min-height: 60px;
+  width: 100%;
+  max-width: 340px;
+}
+
 .encabezado {
   display: flex;
   align-items: center;
@@ -359,4 +377,16 @@ button:active { opacity: 0.85; }
 .nav-inferior__item--activo {
   color: var(--color-salvia);
   background: var(--color-salvia-suave);
+}
+
+/* En pantallas angostas, el botón de una toma baja a su propia línea
+   para no montarse sobre el nombre del medicamento. */
+@media (max-width: 420px) {
+  .tarjeta--toma {
+    flex-wrap: wrap;
+  }
+  .tarjeta--toma .tarjeta__accion {
+    flex: 1 1 100%;
+    margin-top: 10px;
+  }
 }
