@@ -1,125 +1,362 @@
-// Punto de partida del frontend.
-// Antes de usar en producción hay que completar dos valores:
-//   1) URL_BACKEND: la URL que entrega Apps Script al publicar el proyecto como aplicación web.
-//   2) ID_CLIENTE_GOOGLE: el ID de cliente OAuth creado en Google Cloud para el inicio de sesión.
+/* Sistema visual — Historial de Salud Familiar
+   Paleta: fondo cálido neutro, acento salvia (calma/salud), ámbar (recordatorio),
+   ladrillo suave (atrasado). Tipografía: Lora para títulos, Inter para el resto.
+   Tamaños pensados para uso por adultos mayores: texto base grande y áreas
+   táctiles amplias (mínimo ~56px de alto en cualquier botón). */
 
-const URL_BACKEND = "https://script.google.com/macros/s/AKfycbzIyPXHDQNT1naY4PZEbKjG-3Yj3EVodrAl3rdISxQl0rbWByyVv-QtBTR1FGb74MQ/exec";
-const ID_CLIENTE_GOOGLE = "426592081602-i3bd5afd82i1h9ai35lf3isb82isru4o.apps.googleusercontent.com";
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Inter:wght@400;500;600;700&display=swap');
 
-// Miembro que se está consultando actualmente: por defecto, nadie más que uno
-// mismo, hasta que se confirme un código de verificación válido para otro miembro.
-let idMiembroConsultado = null;
-let codigoVerificacionActual = null;
-
-const dialogoCodigo = document.getElementById("dialogoCodigoVerificacion");
-
-document.getElementById("botonCambiarMiembro").addEventListener("click", async () => {
-  const selector = document.getElementById("miembroSeleccionado");
-  selector.innerHTML = '<option value="">Cargando miembros...</option>';
-  dialogoCodigo.showModal();
-
-  const respuesta = await llamarBackend("listarMiembros");
-  selector.innerHTML = '<option value="">Selecciona un miembro</option>';
-  (respuesta.miembros || []).forEach((miembro) => {
-    const opcion = document.createElement("option");
-    opcion.value = miembro.id_miembro;
-    opcion.textContent = miembro.nombre;
-    selector.appendChild(opcion);
-  });
-});
-
-document.getElementById("botonCancelarCodigo").addEventListener("click", () => {
-  dialogoCodigo.close();
-});
-
-document.getElementById("dialogoCodigoVerificacion").addEventListener("close", async () => {
-  if (dialogoCodigo.returnValue !== "default") return; // se cerró con "Cancelar" o al confirmar, ver abajo
-});
-
-document.getElementById("botonConfirmarCodigo").addEventListener("click", async (evento) => {
-  evento.preventDefault();
-  const idMiembroSeleccionado = document.getElementById("miembroSeleccionado").value;
-  const codigoIngresado = document.getElementById("codigoVerificacion").value.trim();
-
-  if (!idMiembroSeleccionado) {
-    alert("Selecciona un miembro de la lista.");
-    return;
-  }
-
-  const respuesta = await llamarBackend("listarResumenInicio", {
-    idMiembroConsultado: idMiembroSeleccionado,
-    codigoVerificacion: codigoIngresado,
-  });
-
-  if (respuesta.error) {
-    alert(respuesta.error);
-    return;
-  }
-
-  idMiembroConsultado = idMiembroSeleccionado;
-  codigoVerificacionActual = codigoIngresado;
-  document.getElementById("etiquetaPersonaVisible").textContent =
-    "Mostrando: " + respuesta.miembro;
-  dialogoCodigo.close();
-});
-
-// Navegación entre las cinco secciones de la barra inferior.
-// Por ahora cada botón solo marca su estado activo; cada vista (citas, medicamentos,
-// historial, más) se construye como su propia pantalla en los siguientes pasos del proyecto.
-document.querySelectorAll(".nav-inferior__item").forEach((boton) => {
-  boton.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-inferior__item")
-      .forEach((b) => b.classList.remove("nav-inferior__item--activo"));
-    boton.classList.add("nav-inferior__item--activo");
-    // Aquí se conectará el cambio de vista real cuando se construyan las demás pantallas.
-  });
-});
-
-// Llamado genérico al backend de Apps Script. Todas las lecturas y escrituras de la
-// aplicación (citas, medicamentos, tomas, documentos) pasan por esta misma función.
-async function llamarBackend(accion, datos = {}) {
-  const respuesta = await fetch(URL_BACKEND, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ accion, correoUsuario: obtenerCorreoUsuario(), ...datos }),
-  });
-  return respuesta.json();
+:root {
+  --color-fondo: #F6F3ED;
+  --color-superficie: #FFFFFF;
+  --color-tinta: #23302B;
+  --color-tinta-suave: #5C6B63;
+  --color-borde: #E3DED3;
+  --color-salvia: #4F6F64;
+  --color-salvia-suave: #E4ECE8;
+  --color-ambar: #C98A3E;
+  --color-ambar-suave: #F5E6D0;
+  --color-atrasado: #B5533E;
+  --color-atrasado-suave: #F5E1DC;
+  --radio: 16px;
+  --sombra: 0 1px 3px rgba(35, 48, 43, 0.08);
 }
 
-// Devuelve el correo de la persona que inició sesión con Google, una vez configurado
-// el inicio de sesión más abajo. Mientras tanto retorna un valor de prueba.
-function obtenerCorreoUsuario() {
-  return window.correoUsuarioActivo || null;
+* { box-sizing: border-box; }
+
+html { font-size: 18px; } /* base más grande que el estándar de 16px */
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 108px;
 }
 
-function alIniciarSesion(respuestaCredencial) {
-  const datos = JSON.parse(atob(respuestaCredencial.credential.split(".")[1]));
-  window.correoUsuarioActivo = datos.email;
-  document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email)
-    .charAt(0)
-    .toUpperCase();
-
-  // Ya identificado, se oculta la pantalla de login y se muestra la aplicación.
-  document.getElementById("pantallaLogin").classList.add("oculto");
-  document.getElementById("aplicacion").classList.remove("oculto");
+h1, h2, .tarjeta__titulo {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  margin: 0;
 }
 
-// Inicializa el botón de Google en cuanto la librería de Google termina de cargar.
-window.addEventListener("load", () => {
-  google.accounts.id.initialize({
-    client_id: ID_CLIENTE_GOOGLE,
-    callback: alIniciarSesion,
-  });
-  google.accounts.id.renderButton(document.getElementById("botonGoogleSignIn"), {
-    theme: "outline",
-    size: "large",
-    text: "signin_with",
-    shape: "pill",
-  });
-});
+button { cursor: pointer; }
+button:active { opacity: 0.85; }
 
-// Nota: para activar el inicio de sesión de Google, se debe incluir en index.html
-// el script https://accounts.google.com/gsi/client y un contenedor que use
-// ID_CLIENTE_GOOGLE junto con la función alIniciarSesion como callback. Este paso
-// se completa una vez exista el ID de cliente OAuth real.
+.oculto { display: none; }
+
+.pantalla-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pantalla-login__contenido {
+  text-align: center;
+  max-width: 360px;
+}
+
+.pantalla-login__icono {
+  display: inline-block;
+  width: 56px;
+  height: 56px;
+  color: var(--color-salvia);
+  margin-bottom: 8px;
+}
+.pantalla-login__icono svg { width: 100%; height: 100%; }
+
+.pantalla-login__contenido h2 {
+  font-size: 1.6rem;
+  margin: 8px 0 10px;
+}
+
+.pantalla-login__contenido p {
+  color: var(--color-tinta-suave);
+  font-size: 1.1rem;
+  margin: 0 0 26px;
+  line-height: 1.5;
+}
+
+#botonGoogleSignIn {
+  display: flex;
+  justify-content: center;
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 18px 16px;
+  background: var(--color-fondo);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  gap: 10px;
+}
+
+.encabezado__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.encabezado__icono {
+  width: 30px;
+  height: 30px;
+  color: var(--color-salvia);
+  flex-shrink: 0;
+}
+.encabezado__icono svg { width: 100%; height: 100%; }
+
+.encabezado h1 {
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.encabezado__acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.encabezado__cambiar {
+  border: 2px solid var(--color-salvia);
+  background: var(--color-superficie);
+  color: var(--color-salvia);
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-height: 56px;
+}
+
+.contenido__persona {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  color: var(--color-tinta-suave);
+}
+
+.dialogo-codigo {
+  border: none;
+  border-radius: var(--radio);
+  padding: 0;
+  max-width: 380px;
+  width: 90%;
+}
+.dialogo-codigo::backdrop { background: rgba(35, 48, 43, 0.5); }
+
+.dialogo-codigo__form {
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dialogo-codigo__titulo {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.dialogo-codigo__ayuda {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: var(--color-tinta-suave);
+  line-height: 1.4;
+}
+
+.dialogo-codigo__form input,
+.dialogo-codigo__form select {
+  border: 2px solid var(--color-borde);
+  border-radius: 12px;
+  padding: 16px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  min-height: 56px;
+  width: 100%;
+}
+
+.dialogo-codigo__botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.dialogo-codigo__cancelar {
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--color-tinta-suave);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 14px 16px;
+  min-height: 56px;
+}
+
+.dialogo-codigo__confirmar {
+  border: none;
+  background: var(--color-salvia);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 999px;
+  padding: 14px 22px;
+  min-height: 56px;
+}
+
+.encabezado__perfil {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-salvia);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contenido {
+  padding: 6px 18px 30px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.resumen { margin-top: 26px; }
+
+.resumen__titulo {
+  font-size: 1.2rem;
+  color: var(--color-tinta);
+  margin-bottom: 12px;
+}
+
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tarjeta--toma .tarjeta__hora {
+  min-width: 78px;
+  font-weight: 700;
+  color: var(--color-ambar);
+  font-size: 1.1rem;
+}
+
+.tarjeta--vencida .tarjeta__hora { color: var(--color-atrasado); }
+.tarjeta--vencida { border-color: var(--color-atrasado-suave); background: var(--color-atrasado-suave); }
+
+.tarjeta__cuerpo { flex: 1; min-width: 0; }
+
+.tarjeta__titulo { font-size: 1.15rem; }
+
+.tarjeta__detalle {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  color: var(--color-tinta-suave);
+}
+
+.tarjeta__accion {
+  border: 2px solid var(--color-salvia);
+  color: var(--color-salvia);
+  background: transparent;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  min-height: 52px;
+}
+
+.tarjeta--cita .tarjeta__fecha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: var(--color-salvia-suave);
+  color: var(--color-salvia);
+  flex-shrink: 0;
+}
+.tarjeta__dia { font-weight: 700; font-size: 1.3rem; line-height: 1; }
+.tarjeta__mes { font-size: 0.85rem; text-transform: lowercase; }
+
+.boton-flotante {
+  position: fixed;
+  right: 20px;
+  bottom: 116px;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-salvia);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 111, 100, 0.4);
+}
+.boton-flotante svg { width: 30px; height: 30px; }
+
+.nav-inferior {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--color-superficie);
+  border-top: 1px solid var(--color-borde);
+  padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
+  z-index: 10;
+}
+
+.nav-inferior__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-tinta-suave);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 2px;
+  min-height: 64px;
+  border-radius: 12px;
+}
+
+.nav-inferior__item svg { width: 28px; height: 28px; }
+
+.nav-inferior__item--activo {
+  color: var(--color-salvia);
+  background: var(--color-salvia-suave);
+}
