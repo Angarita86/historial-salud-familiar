@@ -110,17 +110,47 @@ function decodificarBase64Url(cadena) {
   return atob(relleno);
 }
 
-function alIniciarSesion(respuestaCredencial) {
+// URL exacta de esta página, usada como redirect_uri. Debe coincidir EXACTAMENTE
+// (incluyendo la barra final) con lo registrado en Google Cloud Console como
+// "URI de redireccionamiento autorizados".
+const URL_REDIRECCION = "https://angarita86.github.io/historial-salud-familiar/";
+
+function iniciarLoginGoogle() {
+  const parametros = new URLSearchParams({
+    client_id: ID_CLIENTE_GOOGLE,
+    redirect_uri: URL_REDIRECCION,
+    response_type: "token",
+    scope: "openid email profile",
+    include_granted_scopes: "true",
+    prompt: "select_account",
+  });
+  window.location.href = "https://accounts.google.com/o/oauth2/v2/auth?" + parametros.toString();
+}
+
+async function revisarTokenEnUrl() {
+  const fragmento = window.location.hash;
+  if (!fragmento || !fragmento.includes("access_token")) return;
+
+  const parametros = new URLSearchParams(fragmento.substring(1));
+  const token = parametros.get("access_token");
+  if (!token) return;
+
   try {
-    const datos = JSON.parse(decodificarBase64Url(respuestaCredencial.credential.split(".")[1]));
+    const respuesta = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: "Bearer " + token },
+    });
+    const datos = await respuesta.json();
+
     window.correoUsuarioActivo = datos.email;
     document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email || "?")
       .charAt(0)
       .toUpperCase();
 
-    // Ya identificado, se oculta la pantalla de login y se muestra la aplicación.
     document.getElementById("pantallaLogin").classList.add("oculto");
     document.getElementById("aplicacion").classList.remove("oculto");
+
+    // Limpia el token de la barra de direcciones para que no quede visible ni reutilizable.
+    history.replaceState(null, "", window.location.pathname);
   } catch (error) {
     alert("No se pudo completar el inicio de sesión. Detalle técnico: " + error.message);
   }
@@ -132,26 +162,14 @@ function cerrarSesion() {
   codigoVerificacionActual = null;
   document.getElementById("aplicacion").classList.add("oculto");
   document.getElementById("pantallaLogin").classList.remove("oculto");
-  if (window.google && google.accounts && google.accounts.id) {
-    google.accounts.id.disableAutoSelect();
-  }
 }
 
-// Inicializa el botón de Google en cuanto la librería de Google termina de cargar.
-window.addEventListener("load", () => {
-  google.accounts.id.initialize({
-    client_id: ID_CLIENTE_GOOGLE,
-    callback: alIniciarSesion,
-  });
-  google.accounts.id.renderButton(document.getElementById("botonGoogleSignIn"), {
-    theme: "outline",
-    size: "large",
-    text: "signin_with",
-    shape: "pill",
-  });
-});
+document.getElementById("botonGoogleSignIn").addEventListener("click", iniciarLoginGoogle);
 
-// Nota: para activar el inicio de sesión de Google, se debe incluir en index.html
-// el script https://accounts.google.com/gsi/client y un contenedor que use
-// ID_CLIENTE_GOOGLE junto con la función alIniciarSesion como callback. Este paso
-// se completa una vez exista el ID de cliente OAuth real.
+// Al cargar la página, revisa si venimos de vuelta de Google con un token en la URL.
+window.addEventListener("load", revisarTokenEnUrl);
+
+// Nota: este flujo usa redirección de página completa (no el botón incrustado de
+// Google), porque es mucho más confiable en navegadores móviles que bloquean
+// cookies de terceros. Requiere que URL_REDIRECCION esté registrada como "URI de
+// redireccionamiento autorizados" en el cliente OAuth de Google Cloud Console.
