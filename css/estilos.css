@@ -44,7 +44,7 @@ h1, h2, .tarjeta__titulo {
 button { cursor: pointer; }
 button:active { opacity: 0.85; }
 
-.oculto { display: none; }
+.oculto { display: none !important; }
 
 .pantalla-login {
   min-height: 100vh;
