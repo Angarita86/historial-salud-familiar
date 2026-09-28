@@ -144,25 +144,33 @@ async function revisarTokenEnUrl() {
 
   const parametros = new URLSearchParams(fragmento.substring(1));
   const token = parametros.get("access_token");
+  console.log("Token extraído (primeros 20 caracteres):", token ? token.substring(0, 20) + "..." : "NINGUNO");
   if (!token) return;
 
   try {
+    console.log("Llamando a Google para obtener el correo...");
     const respuesta = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: "Bearer " + token },
     });
+    console.log("Respuesta recibida. Código de estado:", respuesta.status);
+
     const datos = await respuesta.json();
+    console.log("Datos recibidos:", datos);
 
     window.correoUsuarioActivo = datos.email;
     document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email || "?")
       .charAt(0)
       .toUpperCase();
 
+    console.log("Ocultando pantalla de login y mostrando la aplicación...");
     document.getElementById("pantallaLogin").classList.add("oculto");
     document.getElementById("aplicacion").classList.remove("oculto");
+    console.log("Listo. Clases actuales de pantallaLogin:", document.getElementById("pantallaLogin").className);
 
     // Limpia el token de la barra de direcciones para que no quede visible ni reutilizable.
     history.replaceState(null, "", window.location.pathname);
   } catch (error) {
+    console.error("ERROR dentro de revisarTokenEnUrl:", error);
     alert("No se pudo completar el inicio de sesión. Detalle técnico: " + error.message);
   }
 }
