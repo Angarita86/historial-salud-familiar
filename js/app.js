@@ -1,17 +1,45 @@
 // Punto de partida del frontend.
-// Antes de usar en producción hay que completar dos valores:
-//   1) URL_BACKEND: la URL que entrega Apps Script al publicar el proyecto como aplicación web.
-//   2) ID_CLIENTE_GOOGLE: el ID de cliente OAuth creado en Google Cloud para el inicio de sesión.
-
 const URL_BACKEND = "https://script.google.com/macros/s/AKfycbzIyPXHDQNT1naY4PZEbKjG-3Yj3EVodrAl3rdISxQl0rbWByyVv-QtBTR1FGb74MQ/exec";
 const ID_CLIENTE_GOOGLE = "426592081602-i3bd5afd82i1h9ai35lf3isb82isru4o.apps.googleusercontent.com";
+const URL_REDIRECCION = "https://angarita86.github.io/historial-salud-familiar/";
+const CLAVE_SESION = "sesionHistorialSaludFamiliar";
 
-// Miembro que se está consultando actualmente: por defecto, nadie más que uno
-// mismo, hasta que se confirme un código de verificación válido para otro miembro.
 let idMiembroConsultado = null;
 let codigoVerificacionActual = null;
 
 const dialogoCodigo = document.getElementById("dialogoCodigoVerificacion");
+
+/* ---------- Menú lateral ---------- */
+
+const barraLateral = document.getElementById("barraLateral");
+const superposicionMenu = document.getElementById("superposicionMenu");
+
+function abrirMenu() {
+  barraLateral.classList.add("barra-lateral--abierta");
+  superposicionMenu.classList.add("superposicion--visible");
+}
+function cerrarMenu() {
+  barraLateral.classList.remove("barra-lateral--abierta");
+  superposicionMenu.classList.remove("superposicion--visible");
+}
+
+document.getElementById("botonMenu").addEventListener("click", abrirMenu);
+superposicionMenu.addEventListener("click", cerrarMenu);
+
+document.querySelectorAll(".barra-lateral__item").forEach((boton) => {
+  boton.addEventListener("click", () => {
+    document
+      .querySelectorAll(".barra-lateral__item")
+      .forEach((b) => b.classList.remove("barra-lateral__item--activo"));
+    boton.classList.add("barra-lateral__item--activo");
+    cerrarMenu();
+    if (boton.dataset.vista !== "inicio") {
+      alert("Esta sección todavía se está construyendo. Por ahora solo Inicio está disponible.");
+    }
+  });
+});
+
+/* ---------- Diálogo "Ver a otro miembro" ---------- */
 
 document.getElementById("botonCambiarMiembro").addEventListener("click", async () => {
   const selector = document.getElementById("miembroSeleccionado");
@@ -30,10 +58,6 @@ document.getElementById("botonCambiarMiembro").addEventListener("click", async (
 
 document.getElementById("botonCancelarCodigo").addEventListener("click", () => {
   dialogoCodigo.close();
-});
-
-document.getElementById("dialogoCodigoVerificacion").addEventListener("close", async () => {
-  if (dialogoCodigo.returnValue !== "default") return; // se cerró con "Cancelar" o al confirmar, ver abajo
 });
 
 document.getElementById("botonConfirmarCodigo").addEventListener("click", async (evento) => {
@@ -59,22 +83,8 @@ document.getElementById("botonConfirmarCodigo").addEventListener("click", async 
   idMiembroConsultado = idMiembroSeleccionado;
   codigoVerificacionActual = codigoIngresado;
   document.getElementById("etiquetaPersonaVisible").textContent =
-    "Mostrando: " + respuesta.miembro;
+    "Viendo la información de: " + respuesta.miembro;
   dialogoCodigo.close();
-});
-
-// Navegación entre las cinco secciones de la barra inferior.
-// Por ahora solo Inicio tiene contenido construido; las demás avisan que están en camino.
-document.querySelectorAll(".nav-inferior__item").forEach((boton) => {
-  boton.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-inferior__item")
-      .forEach((b) => b.classList.remove("nav-inferior__item--activo"));
-    boton.classList.add("nav-inferior__item--activo");
-    if (boton.dataset.vista !== "inicio") {
-      alert("Esta sección todavía se está construyendo. Por ahora solo Inicio está disponible.");
-    }
-  });
 });
 
 document.getElementById("botonNuevaCita").addEventListener("click", () => {
@@ -87,8 +97,8 @@ document.getElementById("botonPerfil").addEventListener("click", () => {
   }
 });
 
-// Llamado genérico al backend de Apps Script. Todas las lecturas y escrituras de la
-// aplicación (citas, medicamentos, tomas, documentos) pasan por esta misma función.
+/* ---------- Backend ---------- */
+
 async function llamarBackend(accion, datos = {}) {
   const respuesta = await fetch(URL_BACKEND, {
     method: "POST",
@@ -98,22 +108,60 @@ async function llamarBackend(accion, datos = {}) {
   return respuesta.json();
 }
 
-// Devuelve el correo de la persona que inició sesión con Google, una vez configurado
-// el inicio de sesión más abajo. Mientras tanto retorna un valor de prueba.
 function obtenerCorreoUsuario() {
   return window.correoUsuarioActivo || null;
 }
 
-function decodificarBase64Url(cadena) {
-  const normalizada = cadena.replace(/-/g, "+").replace(/_/g, "/");
-  const relleno = normalizada + "=".repeat((4 - (normalizada.length % 4)) % 4);
-  return atob(relleno);
+/* ---------- Sesión: guardado y restauración ---------- */
+
+function guardarSesion(datosPerfil, expiraEnSegundos) {
+  const sesion = {
+    email: datosPerfil.email,
+    nombre: datosPerfil.given_name || datosPerfil.name || datosPerfil.email,
+    expiraEn: Date.now() + Number(expiraEnSegundos || 3600) * 1000,
+  };
+  localStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
 }
 
-// URL exacta de esta página, usada como redirect_uri. Debe coincidir EXACTAMENTE
-// (incluyendo la barra final) con lo registrado en Google Cloud Console como
-// "URI de redireccionamiento autorizados".
-const URL_REDIRECCION = "https://angarita86.github.io/historial-salud-familiar/";
+function leerSesionGuardada() {
+  const crudo = localStorage.getItem(CLAVE_SESION);
+  if (!crudo) return null;
+  try {
+    const sesion = JSON.parse(crudo);
+    if (!sesion.expiraEn || sesion.expiraEn < Date.now()) {
+      localStorage.removeItem(CLAVE_SESION);
+      return null;
+    }
+    return sesion;
+  } catch (error) {
+    localStorage.removeItem(CLAVE_SESION);
+    return null;
+  }
+}
+
+function borrarSesionGuardada() {
+  localStorage.removeItem(CLAVE_SESION);
+}
+
+function mostrarAplicacionComoLogueado(email, nombre) {
+  window.correoUsuarioActivo = email;
+  document.getElementById("inicialUsuario").textContent = (nombre || email || "?").charAt(0).toUpperCase();
+  document.getElementById("avatarSaludo").textContent = (nombre || email || "?").charAt(0).toUpperCase();
+  document.getElementById("nombreSaludo").textContent = nombre || email;
+  document.getElementById("pantallaLogin").classList.add("oculto");
+  document.getElementById("aplicacion").classList.remove("oculto");
+}
+
+function cerrarSesion() {
+  window.correoUsuarioActivo = null;
+  idMiembroConsultado = null;
+  codigoVerificacionActual = null;
+  borrarSesionGuardada();
+  document.getElementById("aplicacion").classList.add("oculto");
+  document.getElementById("pantallaLogin").classList.remove("oculto");
+}
+
+/* ---------- Login con Google (redirección de página completa) ---------- */
 
 function iniciarLoginGoogle() {
   const parametros = new URLSearchParams({
@@ -128,67 +176,43 @@ function iniciarLoginGoogle() {
 }
 
 async function revisarTokenEnUrl() {
-  console.log("URL completa al cargar la página:", window.location.href);
-
   const fragmento = window.location.hash;
-  if (!fragmento) {
-    console.log("No hay ningún fragmento (#...) en la URL — no venimos de un regreso de Google.");
-    return;
-  }
-  console.log("Fragmento recibido de Google:", fragmento);
-
-  if (!fragmento.includes("access_token")) {
-    console.log("El fragmento NO contiene access_token. Revisa el contenido completo arriba.");
-    return;
-  }
+  if (!fragmento || !fragmento.includes("access_token")) return false;
 
   const parametros = new URLSearchParams(fragmento.substring(1));
   const token = parametros.get("access_token");
-  console.log("Token extraído (primeros 20 caracteres):", token ? token.substring(0, 20) + "..." : "NINGUNO");
-  if (!token) return;
+  const expiraEnSegundos = parametros.get("expires_in");
+  if (!token) return false;
 
   try {
-    console.log("Llamando a Google para obtener el correo...");
     const respuesta = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: "Bearer " + token },
     });
-    console.log("Respuesta recibida. Código de estado:", respuesta.status);
-
     const datos = await respuesta.json();
-    console.log("Datos recibidos:", datos);
 
-    window.correoUsuarioActivo = datos.email;
-    document.getElementById("inicialUsuario").textContent = (datos.given_name || datos.email || "?")
-      .charAt(0)
-      .toUpperCase();
-
-    console.log("Ocultando pantalla de login y mostrando la aplicación...");
-    document.getElementById("pantallaLogin").classList.add("oculto");
-    document.getElementById("aplicacion").classList.remove("oculto");
-    console.log("Listo. Clases actuales de pantallaLogin:", document.getElementById("pantallaLogin").className);
+    guardarSesion(datos, expiraEnSegundos);
+    mostrarAplicacionComoLogueado(datos.email, datos.given_name || datos.name);
 
     // Limpia el token de la barra de direcciones para que no quede visible ni reutilizable.
     history.replaceState(null, "", window.location.pathname);
+    return true;
   } catch (error) {
-    console.error("ERROR dentro de revisarTokenEnUrl:", error);
     alert("No se pudo completar el inicio de sesión. Detalle técnico: " + error.message);
+    return false;
   }
-}
-
-function cerrarSesion() {
-  window.correoUsuarioActivo = null;
-  idMiembroConsultado = null;
-  codigoVerificacionActual = null;
-  document.getElementById("aplicacion").classList.add("oculto");
-  document.getElementById("pantallaLogin").classList.remove("oculto");
 }
 
 document.getElementById("botonGoogleSignIn").addEventListener("click", iniciarLoginGoogle);
 
-// Al cargar la página, revisa si venimos de vuelta de Google con un token en la URL.
-window.addEventListener("load", revisarTokenEnUrl);
+window.addEventListener("load", async () => {
+  // 1) ¿Venimos de un regreso de Google con un token nuevo en la URL?
+  const entroConTokenNuevo = await revisarTokenEnUrl();
+  if (entroConTokenNuevo) return;
 
-// Nota: este flujo usa redirección de página completa (no el botón incrustado de
-// Google), porque es mucho más confiable en navegadores móviles que bloquean
-// cookies de terceros. Requiere que URL_REDIRECCION esté registrada como "URI de
-// redireccionamiento autorizados" en el cliente OAuth de Google Cloud Console.
+  // 2) Si no, ¿hay una sesión guardada y todavía vigente de una visita anterior?
+  const sesionGuardada = leerSesionGuardada();
+  if (sesionGuardada) {
+    mostrarAplicacionComoLogueado(sesionGuardada.email, sesionGuardada.nombre);
+  }
+  // 3) Si tampoco hay sesión guardada, se queda en la pantalla de login normalmente.
+});
