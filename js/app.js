@@ -128,8 +128,19 @@ function iniciarLoginGoogle() {
 }
 
 async function revisarTokenEnUrl() {
+  console.log("URL completa al cargar la página:", window.location.href);
+
   const fragmento = window.location.hash;
-  if (!fragmento || !fragmento.includes("access_token")) return;
+  if (!fragmento) {
+    console.log("No hay ningún fragmento (#...) en la URL — no venimos de un regreso de Google.");
+    return;
+  }
+  console.log("Fragmento recibido de Google:", fragmento);
+
+  if (!fragmento.includes("access_token")) {
+    console.log("El fragmento NO contiene access_token. Revisa el contenido completo arriba.");
+    return;
+  }
 
   const parametros = new URLSearchParams(fragmento.substring(1));
   const token = parametros.get("access_token");
