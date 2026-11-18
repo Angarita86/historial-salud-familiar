@@ -1,5 +1,5 @@
 // Punto de partida del frontend.
-const URL_BACKEND = "https://script.google.com/macros/s/AKfycbzIyPXHDQNT1naY4PZEbKjG-3Yj3EVodrAl3rdISxQl0rbWByyVv-QtBTR1FGb74MQ/exec";
+const URL_BACKEND = "https://script.google.com/macros/s/AKfycbyB0lKJ9_2PhfOXVRHwhDOgIxCDRXnif-hGP3NP_h7AUs3B200zQ9hGdh602jtOshoF/exec";
 const ID_CLIENTE_GOOGLE = "426592081602-i3bd5afd82i1h9ai35lf3isb82isru4o.apps.googleusercontent.com";
 const URL_REDIRECCION = "https://angarita86.github.io/historial-salud-familiar/";
 const CLAVE_SESION = "sesionHistorialSaludFamiliar";
