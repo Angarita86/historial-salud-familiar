@@ -283,19 +283,87 @@ function crearTarjetaCita(cita) {
   return tarjeta;
 }
 
-async function marcarCitaComoAtendida(idCita) {
-  if (!confirm("¿Confirmas que esta cita ya fue atendida?")) return;
+function abrirDialogoResultado(idCita) {
+  window.idCitaResultado = idCita;
+  document.getElementById("resultadoRecomendaciones").value = "";
+  document.getElementById("resultadoExamenes").value = "";
+  document.getElementById("listaPendientesFormulario").innerHTML = "";
+  document.getElementById("dialogoResultado").showModal();
+}
+
+function agregarFilaPendienteAlFormulario() {
+  const fila = document.createElement("div");
+  fila.className = "fila-pendiente";
+
+  const selectTipo = document.createElement("select");
+  selectTipo.className = "pendiente-tipo";
+  [
+    { valor: "control", texto: "Cita de control" },
+    { valor: "examen", texto: "Examen" },
+    { valor: "medicamento", texto: "Medicamento" },
+  ].forEach(function (opcion) {
+    const elementoOpcion = document.createElement("option");
+    elementoOpcion.value = opcion.valor;
+    elementoOpcion.textContent = opcion.texto;
+    selectTipo.appendChild(elementoOpcion);
+  });
+
+  const inputDescripcion = document.createElement("input");
+  inputDescripcion.type = "text";
+  inputDescripcion.className = "pendiente-descripcion";
+  inputDescripcion.placeholder = "Descripción";
+
+  const etiquetaAutorizacion = document.createElement("label");
+  const casillaAutorizacion = document.createElement("input");
+  casillaAutorizacion.type = "checkbox";
+  casillaAutorizacion.className = "pendiente-autorizacion";
+  etiquetaAutorizacion.appendChild(casillaAutorizacion);
+  etiquetaAutorizacion.appendChild(document.createTextNode("Requiere autorización"));
+
+  const botonEliminar = document.createElement("button");
+  botonEliminar.type = "button";
+  botonEliminar.textContent = "✕";
+  botonEliminar.addEventListener("click", function () {
+    fila.remove();
+  });
+
+  fila.appendChild(selectTipo);
+  fila.appendChild(inputDescripcion);
+  fila.appendChild(etiquetaAutorizacion);
+  fila.appendChild(botonEliminar);
+
+  document.getElementById("listaPendientesFormulario").appendChild(fila);
+}
+
+async function guardarResultado() {
+  const recomendaciones = document.getElementById("resultadoRecomendaciones").value.trim();
+  const examenesNuevos = document.getElementById("resultadoExamenes").value.trim();
+
+  const pendientes = Array.from(document.querySelectorAll("#listaPendientesFormulario .fila-pendiente"))
+    .map(function (fila) {
+      return {
+        tipo: fila.querySelector(".pendiente-tipo").value,
+        descripcion: fila.querySelector(".pendiente-descripcion").value.trim(),
+        requiereAutorizacion: fila.querySelector(".pendiente-autorizacion").checked,
+      };
+    })
+    .filter(function (p) {
+      return p.descripcion !== "";
+    });
+
   try {
-    await llamarBackend("marcarCitaAtendida", { idCita: idCita });
-    if (confirm("¿Deseas registrar el resultado de la cita (recomendaciones, exámenes, etc.)?")) {
-      const notas = prompt("Escribe el resultado / recomendaciones de la cita:");
-      if (notas) {
-        await llamarBackend("registrarResultado", { idCita: idCita, notas: notas });
-      }
-    }
+    await llamarBackend("registrarResultado", {
+      idCita: window.idCitaResultado,
+      idMiembro: window.idMiembroVisible,
+      recomendaciones: recomendaciones,
+      examenesNuevos: examenesNuevos,
+      pendientes: pendientes,
+    });
+    document.getElementById("dialogoResultado").close();
+    alert("Resultado guardado correctamente.");
     cargarCitas();
   } catch (error) {
-    alert("No se pudo actualizar la cita: " + error.message);
+    alert("No se pudo guardar el resultado: " + error.message);
   }
 }
 
