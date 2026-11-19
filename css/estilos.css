@@ -357,3 +357,117 @@ button:active { opacity: 0.85; }
   .tarjeta--toma { flex-wrap: wrap; }
   .tarjeta--toma .tarjeta__accion { flex: 1 1 100%; margin-top: 10px; }
 }
+
+.encabezado-vista {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.boton-primario {
+  background: var(--color-salvia);
+  color: #fff;
+  border: none;
+  border-radius: var(--radio);
+  padding: 12px 18px;
+  font-size: 1rem;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.texto-vacio {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}
+
+.tarjeta--cita-item {
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.tarjeta--cita-item__linea1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tarjeta--cita-item__estado {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+.estado--programada { background: var(--color-salvia); }
+.estado--atendida { background: #6c8f6c; }
+.estado--cancelada { background: #b0b0b0; }
+
+.tarjeta--cita-item__temas {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.etiqueta-tema {
+  background: var(--color-ambar);
+  color: #4a3b00;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.tarjeta--cita-item__acciones {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tarjeta--cita-item__acciones button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border-radius: var(--radio);
+  border: 1px solid var(--color-salvia);
+  background: #fff;
+  color: var(--color-salvia-oscura);
+}
+
+.dialogo-cita label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+.dialogo-cita input,
+.dialogo-cita textarea {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: var(--radio);
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+.grupo-temas {
+  margin-bottom: 14px;
+}
+.grupo-temas label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 14px;
+  font-size: 0.9rem;
+}
+.acciones-dialogo {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
