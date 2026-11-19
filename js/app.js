@@ -347,6 +347,10 @@ function abrirDialogoCita(modo, citaOriginal) {
   document.getElementById("citaNotas").value = citaOriginal ? citaOriginal.notas || "" : "";
   document.getElementById("citaFecha").value = "";
   document.getElementById("citaHora").value = "";
+    const hoy = new Date();
+  const hoyFormateada =
+    hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" + String(hoy.getDate()).padStart(2, "0");
+  document.getElementById("citaFecha").min = hoyFormateada;
 
   cargarTemasEnFormulario(citaOriginal ? citaOriginal.temas : []);
 
@@ -360,6 +364,13 @@ async function guardarCita() {
   const hora = document.getElementById("citaHora").value;
   const lugar = document.getElementById("citaLugar").value.trim();
   const notas = document.getElementById("citaNotas").value.trim();
+    const hoy = new Date();
+  const hoyFormateada =
+    hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" + String(hoy.getDate()).padStart(2, "0");
+  if (fecha < hoyFormateada) {
+    alert("No puedes registrar una cita en una fecha anterior a hoy.");
+    return;
+  }
 
   if (!especialidad || !fecha || !hora) {
     alert("Especialidad, fecha y hora son obligatorios.");
