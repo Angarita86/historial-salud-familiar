@@ -471,3 +471,45 @@ button:active { opacity: 0.85; }
   gap: 10px;
   margin-top: 10px;
 }
+
+.grupo-pendientes {
+  margin: 14px 0;
+}
+.fila-pendiente {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #f4f4f0;
+  border-radius: var(--radio);
+}
+.fila-pendiente select,
+.fila-pendiente input[type="text"] {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.fila-pendiente label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.fila-pendiente button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #a33;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+#botonAgregarPendiente {
+  background: #fff;
+  border: 1px dashed var(--color-salvia);
+  border-radius: var(--radio);
+  padding: 8px 12px;
+  color: var(--color-salvia-oscura);
+  cursor: pointer;
+}
