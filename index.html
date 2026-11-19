@@ -199,6 +199,29 @@
     </div>
   </form>
 </dialog>
+
+<dialog class="dialogo-codigo dialogo-cita" id="dialogoResultado">
+  <form method="dialog" id="formularioResultado">
+    <h3>Resultado de la cita</h3>
+    <label>Recomendaciones del médico
+      <textarea id="resultadoRecomendaciones" rows="3"></textarea>
+    </label>
+    <label>Nuevos exámenes (resumen, opcional)
+      <textarea id="resultadoExamenes" rows="2"></textarea>
+    </label>
+
+    <div class="grupo-pendientes">
+      <span>Pendientes generados por esta cita:</span>
+      <div id="listaPendientesFormulario"></div>
+      <button type="button" id="botonAgregarPendiente">+ Agregar pendiente</button>
+    </div>
+
+    <div class="acciones-dialogo">
+      <button type="button" id="botonCancelarResultado">Cancelar</button>
+      <button type="button" id="botonGuardarResultado" class="boton-primario">Guardar resultado</button>
+    </div>
+  </form>
+</dialog>
   <script src="js/app.js"></script>
 </body>
 </html>
