@@ -259,7 +259,7 @@ function crearTarjetaCita(cita) {
     const botonAtendida = document.createElement("button");
     botonAtendida.textContent = "Marcar atendida";
     botonAtendida.addEventListener("click", function () {
-      marcarCitaComoAtendida(cita.id_cita);
+      abrirDialogoResultado(cita.id_cita);
     });
 
     const botonCancelar = document.createElement("button");
@@ -561,6 +561,11 @@ window.addEventListener("load", async function () {
     document.getElementById("dialogoCita").close();
   });
   document.getElementById("botonGuardarCita").addEventListener("click", guardarCita);
+  document.getElementById("botonAgregarPendiente").addEventListener("click", agregarFilaPendienteAlFormulario);
+  document.getElementById("botonCancelarResultado").addEventListener("click", function () {
+    document.getElementById("dialogoResultado").close();
+  });
+  document.getElementById("botonGuardarResultado").addEventListener("click", guardarResultado);
 
   const entroConTokenNuevo = await revisarTokenEnUrl();
   if (entroConTokenNuevo) return;
