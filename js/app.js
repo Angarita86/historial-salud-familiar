@@ -121,12 +121,17 @@ async function revisarTokenEnUrl() {
 // ===== Resolver miembro activo (mapea correo -> id_miembro) =====
 async function resolverMiembroActivo() {
   try {
-    const miembros = await llamarBackend("listarMiembros", {});
+    const resumen = await llamarBackend("listarResumenInicio", {
+      correoUsuario: obtenerCorreoUsuario(),
+      idMiembroConsultado: "",
+      codigoVerificacion: "",
+    });
+    const nombreResuelto = resumen.miembro;
+    const respuestaMiembros = await llamarBackend("listarMiembros", {});
+    const miembros = respuestaMiembros.miembros || [];
     window.listaMiembrosCache = miembros;
-    const correo = obtenerCorreoUsuario();
     const miembroPropio = miembros.filter(function (m) {
-      const correosCuidador = (m.correo_cuidador || "").split(",").map(function (c) { return c.trim(); });
-      return m.correo_propio === correo || correosCuidador.indexOf(correo) !== -1;
+      return m.nombre === nombreResuelto;
     })[0];
     if (miembroPropio) {
       window.idMiembroVisible = miembroPropio.id_miembro;
@@ -335,6 +340,7 @@ function abrirDialogoCita(modo, citaOriginal) {
 
   document.getElementById("tituloDialogoCita").textContent =
     modo === "reprogramar" ? "Reprogramar cita" : "Nueva cita";
+  document.getElementById("etiquetaCitaPara").textContent = "Para: " + (window.nombreMiembroVisible || "");
   document.getElementById("citaEspecialidad").value = citaOriginal ? citaOriginal.especialidad || "" : "";
   document.getElementById("citaMedico").value = citaOriginal ? citaOriginal.medico || "" : "";
   document.getElementById("citaLugar").value = citaOriginal ? citaOriginal.lugar || "" : "";
@@ -393,8 +399,12 @@ async function guardarCita() {
 // ===== Cambiar de miembro visible (con código de verificación) =====
 async function abrirDialogoCambioMiembro() {
   try {
-    const miembros = window.listaMiembrosCache || (await llamarBackend("listarMiembros", {}));
-    window.listaMiembrosCache = miembros;
+    let miembros = window.listaMiembrosCache;
+    if (!miembros) {
+      const respuesta = await llamarBackend("listarMiembros", {});
+      miembros = respuesta.miembros || [];
+      window.listaMiembrosCache = miembros;
+    }
     const selector = document.getElementById("miembroSeleccionado");
     selector.innerHTML = "";
     miembros.forEach(function (miembro) {
