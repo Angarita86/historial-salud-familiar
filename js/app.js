@@ -70,7 +70,7 @@ function mostrarAplicacionComoLogueado(email, nombre) {
   document.getElementById("nombreSaludo").textContent = nombre || email;
   document.getElementById("pantallaLogin").classList.add("oculto");
   document.getElementById("aplicacion").classList.remove("oculto");
-  resolverMiembroActivo();
+  window.promesaMiembroActivo = resolverMiembroActivo();
   cargarResumenInicio();
 }
 
@@ -190,6 +190,7 @@ function mostrarVista(nombreVista) {
 
 // ===== CITAS =====
 async function cargarCitas() {
+  if (window.promesaMiembroActivo) await window.promesaMiembroActivo;
   const contenedor = document.getElementById("listaCitas");
   contenedor.innerHTML = '<p class="texto-vacio">Cargando citas...</p>';
   try {
@@ -378,6 +379,7 @@ async function cancelarCitaExistente(idCita) {
 }
 
 async function cargarTemasEnFormulario(temasSeleccionados) {
+  if (window.promesaMiembroActivo) await window.promesaMiembroActivo;
   const contenedor = document.getElementById("temasCitaContenedor");
   contenedor.innerHTML = "Cargando temas...";
   try {
@@ -426,6 +428,7 @@ function abrirDialogoCita(modo, citaOriginal) {
 }
 
 async function guardarCita() {
+  if (window.promesaMiembroActivo) await window.promesaMiembroActivo;
   const especialidad = document.getElementById("citaEspecialidad").value.trim();
   const medico = document.getElementById("citaMedico").value.trim();
   const fecha = document.getElementById("citaFecha").value;
